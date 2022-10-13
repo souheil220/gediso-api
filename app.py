@@ -36,6 +36,7 @@ def get_all_documents():
     cycleDeValidation = ConnexionOdoo.getValidationCycle(ConnexionOdoo,document_id)
    
     ids_list = []
+
     
     nameParent = userParent[0][1].split('.')
     for id in cycleDeValidation:
@@ -64,6 +65,7 @@ def get_all_documents():
     #              "search_read",
     #             [[["user_id","=",2031],["document_id","=",document_id]
     #           ]], {"fields": ["document_id","state","attachment_id"]},)
+    # return ([{"deg_documents":ged_docs , "validation_cycle":ids_list}])
     return ([{"deg_documents":ged_docs , "validation_cycle":ids_list}])
 
 @app.route("/get_heure_sup")

@@ -1,0 +1,79 @@
+import pandas as pd
+
+# Build cars DataFrame
+ids = [142052,142052,142052,142052,142052]
+create_date = ['2021-05-16 07:59:08.398',
+                '2021-05-16 07:59:08.398',
+                '2021-05-16 07:59:08.398',
+                '2021-05-16 07:59:08.398',
+                '2021-05-16 07:59:08.398']
+document_ids = [10,10,10,10,10]
+state = ['refused','refused','refused','refused','refused']
+attachment_id = [589684,589684,589684,589684,589684]
+record_id = [142052,142052,142052,142052,142052]
+record_owner = [2031,2031,2031,2031,2031]
+name = ["Demande d'Approvisionnement",
+        "Demande d'Approvisionnement",
+        "Demande d'Approvisionnement",
+        "Demande d'Approvisionnement",
+        "Demande d'Approvisionnement"]
+user_id = [85,1995,85,1995,1862]
+grv_id = [256043,256113,256338,256569,256816]
+
+dict = { 'id':ids, 
+        'create_date':create_date, 
+        'document_id':document_ids,
+        "state":state,
+        "attachment_id":attachment_id, 
+        "record_id":record_id,
+        "record owner":record_owner,
+        "name":name,
+        "grv id":grv_id,
+        0:user_id,}
+
+
+
+users = pd.DataFrame({"user_id":[85,1995,85,1995,1862,]})
+
+
+import pandas as pds
+from sqlalchemy import create_engine
+
+cars = pd.DataFrame(dict)
+
+df3 = pd.merge(cars.iloc[:1],users.T)
+
+
+print(df3.to_string())
+
+
+
+def connect():
+        alchemyEngine   = create_engine('postgresql+psycopg2://odoo:odoo_hasnaoui_2021@10.20.10.43/hasnaoui', pool_recycle=3600);
+        dbConnection    = alchemyEngine.connect();
+        print ("Connecting to database\n	->%s" % (dbConnection))
+       
+        return dbConnection
+
+def getGedisoDocumentRecord(self,id):
+
+        dbConnection = self.connect()
+        dataFrame = pds.read_sql("""SELECT gdr.id,
+                                        gdr.create_date,
+                                        gdr.document_id,
+                                        gdr.state,
+                                        gdr.attachment_id,
+                                        grv.record_id,
+                                        gdr.user_id AS "record owner",
+                                        ia.name,
+                                        grv.user_id,
+                                        grv.id "grv id"
+                                FROM gediso_document_record gdr
+                                        LEFT JOIN ir_attachment ia ON gdr.attachment_id = ia.id
+                                        RIGHT JOIN gediso_record_validation grv ON gdr.id = grv.record_id
+                                        where gdr.user_id = 2031 and gdr.document_id = 6 and gdr.id = 142052
+                                ORDER BY grv.create_date;""", dbConnection);
+        pds.set_option('display.expand_frame_repr', False);
+        # print(dataFrame.pivot(index='id', columns='user_id')[0])
+        print(dataFrame.pivot_table(index='id', columns=['15','775'] ,values='user_id'))
+        return dataFrame

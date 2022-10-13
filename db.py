@@ -62,6 +62,7 @@ class Connexion:
 class ConnexionOdoo:
     def connect():
         conn_string = "host='10.20.10.43' dbname='hasnaoui' user='odoo' password='odoo_hasnaoui_2021'"
+       
         print ("Connecting to database\n	->%s" % (conn_string))
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
@@ -69,19 +70,37 @@ class ConnexionOdoo:
 
     def getGedisoDocumentRecord(self,id):
         cursor = self.connect()
-        cursor.execute("""select 
-                            gdr.id,
-                            gdr.document_id,
-                            gdr.state,
-                            gdr.attachment_id,
-                            ia.name 
-                        from gediso_document_record gdr
-                        left join ir_attachment ia on gdr.attachment_id = ia.id
-                        where gdr.user_id=2225 and gdr.document_id=%s"""%id)
+        cursor.execute("""
+                        select * 
+                          from CROSSTAB ('
+                                SELECT 
+                                record_id,
+                                id, 
+                                user_id
+    	                        FROM public."DOCULMENT_VALIDATION_CYCLE"
+    	                        where "record owner" IN (2031) and document_id IN (%s)
+			                    order by 1,2' )
+                                AS T(record_id int, 
+                                    validation_user_1 int,
+                                    validation_user_2 INT,
+                                    validation_user_3 INT,
+                                    validation_user_4 INT,
+                                    validation_user_5 INT)
+                        LEFT join (select 
+                                        distinct id,
+                                        TO_CHAR(create_date:: DATE, 'dd/mm/yyyy') "create_date",
+                                        document_id,state,
+                                        attachment_id,
+                                        record_id,
+                                        "record owner",
+                                        name 
+                                    from public."DOCULMENT_VALIDATION_CYCLE")as dvc 
+                        on T.record_id = dvc.record_id
+                        order by dvc.create_date desc"""%id)
         records = cursor.fetchall()
         cursor.close()
         return records
-    
+       
 
     def getUserParentId(self,id):
         cursor = self.connect()
@@ -101,9 +120,9 @@ class ConnexionOdoo:
                             ru.login 
                             FROM public.gediso_validation_document gvd
                             left join res_users ru on gvd.user_id = ru.id 
-                            where document_id =6 and gvd.active = true and gvd.company_id =1
+                            where document_id =%s and gvd.active = true and gvd.company_id =1
                             order by --rc."name" ,
-                            gvd."sequence" asc""")
+                            gvd."sequence" asc"""%id)
         records = cursor.fetchall()
         cursor.close()
         return records

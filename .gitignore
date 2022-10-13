@@ -18,6 +18,9 @@ build/
 docs/_build/
 .vscode
 
+images/
+.images/
+
 # Coverage reports
 htmlcov/
 .coverage
